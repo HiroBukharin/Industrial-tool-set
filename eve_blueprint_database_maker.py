@@ -5,13 +5,13 @@
 import sqlite3
 
 
-conn = sqlite3.connect(DARPA_blueprints.db)
+conn = sqlite3.connect('DARPA_blueprints.db')
 
-c = conn.cursor()
+cursor = conn.cursor()
 
-c.execute("""CREATE TABLE IF NOT EXISTS 
+cursor.execute("""CREATE TABLE IF NOT EXISTS 
         All_blueprints (ID INT PRIMAY KEY, time_efficiency INT, type_id INT,
           type_name TEXT, quantity INT, location_id INT, material_efficiency INT,
-          run INT)"""
+          run INT)""")
 
-          
+conn.commit()
