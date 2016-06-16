@@ -29,6 +29,10 @@ import sqlite3
 # 
 # eve kill docs https://beta.eve-kill.net/api/docs/
 
+
+
+# HOW TO USE
+
 #
 # populate the visit dictionary opens the json dump from CREST
 # it them creates a dictionary of the key info for doing lookups or for 
@@ -79,7 +83,12 @@ def open_for_id_name(id_url):
     price_json_object = requests.get(id_url, headers=use_agent) # lookup the url
     print('opened url with requests')
     return price_json_object.json() # return the results as a json object
- 
+
+    # ['items', 'pageCount_str', 'pageCount', 'totalCount', 'totalCount_str']
+    # 'items': returns something like:
+    # {'type': {'href': 'https://crest-tq.eveonline.com/types/32772/',
+    # 'id_str': '32772', 'id': 32772, 'name': 'Medium Ancillary Shield Booster'},
+    # 'averagePrice': 284979.3, 'adjustedPrice': 286018.91}
  
 def populate_item_dictionary(id_lookup_dictionary):
     '''
