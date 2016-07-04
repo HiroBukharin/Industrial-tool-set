@@ -82,8 +82,9 @@ for key in darpa_blue:
                   darpa_blue[key]['location_id'],
                   darpa_blue[key]['material_efficiency'],
                   darpa_blue[key]['runs'])
+
     cursor.execute("INSERT INTO All_blueprints VALUES (?,?,?,?,?,?,?,?)",blue_frame)
-    conn.comit()    
+    conn.commit()    
     
     
 
