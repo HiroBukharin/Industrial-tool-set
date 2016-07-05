@@ -9,8 +9,6 @@ BPO_db = r'/home/pi/scripts/eve/DARPA_blueprints.db'
 
 buy_list = defaultdict(int)
 
-
-
 '''
 #create a dictionary of ID : 'text name'
 ID_name = {}
@@ -19,7 +17,6 @@ for x in number_name:
 #close the datbase connection
 conn.close()
 
-
 # connect to DARPA blueprints
 conn = sqlite3.connect('DARPA_blueprints.db')
 cursor = conn.cursor()
@@ -27,53 +24,60 @@ cursor = conn.cursor()
 
 def find_name(id_num):
     '''
-    takes an id number and finds the plain text name 
+    takes an id number and finds the plain text name as a string
     '''
     id_str = str(id_num)
     conn = sqlite3.connect(SDE_path)
     cursor = conn.cursor()
     name = cursor.execute("SELECT typeName FROM invTypes WHERE typeID = ?",(id_num,))
     name_tup = name.fetchone()
+    
     conn.close
     return name_tup[0]
 
 def find_id(item_name):
     '''
-    takes an item name and finds the id number
+    takes an item name and finds the id number as an int
     '''
     conn = sqlite3.connect(SDE_path)
     cursor = conn.cursor()
     id_number = cursor.execute("SELECT typeID FROM invTypes WHERE typeName = ?",(item_name,))
     the_num = id_number.fetchone()
     conn.close
-    return the_num[0]
+    if the_num:
+        return the_num[0]
+    else:
+        return None
 
 def find_materials(item_ident):
     '''
-    takes a item id and returns the build requirements
+    takes a item id and returns the build requirements as a collection of tuples
     '''
-    conn = sqlite3.connect(SDE_path)
-    cursor = conn.cursor()
-    build = cursor.execute("""
-    SELECT materialTypeID,quantity
-    FROM invTypeMaterials
-    WHERE typeID = ?
-    """,(item_ident,)
-                           )
-    
-    materials = build.fetchall()
-    conn.close
-    return materials
+    if item_ident:
+        conn = sqlite3.connect(SDE_path)
+        cursor = conn.cursor()
+        build = cursor.execute("""
+        SELECT materialTypeID,quantity
+        FROM invTypeMaterials
+        WHERE typeID = ?
+        """,(item_ident,)
+                               )
+        
+        materials = build.fetchall()
+        conn.close
+        return materials
+    else:
+        return None
 
 def extract_BPO_list():
     '''
     extracts a set of BPOs from the database and returns them as a dictionary
     '''
-    conn = sqlite3.connect(BPO_db)
+    conn = sqlite3.connect(BPO_db) #  the database that contains all corp BPOs
     cursor = conn.cursor()
     name_id = cursor.execute("""SELECT type_id, type_name FROM All_blueprints 
                              WHERE quantity = -1""") #  find all BPO's
-    BPO = name_id.fetchall() #  fetch them
+    BPO = name_id.fetchall() #  fetch them, a collection of (id,name)tuples
     conn.close #  close db connection
     def_dictionary = defaultdict(int)
     for each_tuple in BPO:
@@ -84,27 +88,37 @@ def extract_BPO_list():
         else:
             def_dictionary[BP_name] = BP_id #  enter a value
 
-    return def_dictionary
-
-
+    return def_dictionary #  a reconstructed dictionary of id: name
 
 def extract_material_list_all():
     '''
     extracts a set of materials needed to build all of the BPOs
     '''
     BPO_names = extract_BPO_list()
-    
-
+    print(len(BPO_names), '# of BPO')
+    materials = []
     for e_p in BPO_names:  #  for each blueprint in BPO_names
-        p_name = e_p[0].strip(' Blueprint') #  this is the product name
-        p_id = find_name(p_name) # this is the id number
-        components = find_materials(p_id) #  use the id number to find the build list
-        for pair in components:
-            m_id = pair[0] #  material ID
-            amount = pair[1] #  amount of material
+        print(e_p, 'e_p')        
+        p_name = e_p[:-10].strip() #  this is the product name
+        print(p_name, 'p_name')
+        if p_name:
+            p_id = find_id(p_name) # this is the id number
+            print(p_id, 'p_id')
             
+            components = find_materials(p_id) #  use the id number to find the build list
+            print(components)
+            if components:
+                for pair in components:
+                    m_id = pair[0] #  material ID
+                    amount = pair[1] #  amount of material
+                    if m_id not in materials: materials.append(m_id)
+            else:
+                print('could not find components for, ',p_id)
+        else:
+            print(p_name, 'error')
+        
+    return materials
 
-
-print(find_id('Medium Processor Overclocking Unit I'))
-
+comps = extract_material_list_all()
+print(len(comps))
 
