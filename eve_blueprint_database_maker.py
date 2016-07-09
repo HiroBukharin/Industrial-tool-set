@@ -15,3 +15,7 @@ cursor.execute("""CREATE TABLE IF NOT EXISTS
           run INT)""")
 
 conn.commit()
+
+cursor.execute("""CREATE TABLE IF NOT EXISTS
+               Build_Materials (ID INT, price REAL)""")
+conn.commit()
