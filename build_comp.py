@@ -1,10 +1,13 @@
 
 '''
 This script does a variety functions related to the blueprint database
+
 eve_blueprint_database_maker.py sets up the database and basic tables
+
 this script extracts various features from the SDE and inserts them
 into BPO_db 
-the eve_CREST_lookup_script.py can update price information
+
+the eve_CREST_lookup_script.py can lookup  price information
 
 '''
 
