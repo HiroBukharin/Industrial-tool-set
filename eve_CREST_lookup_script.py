@@ -56,18 +56,44 @@ blue print activities might be
 
 # http://sebastianraschka.com/Articles/2014_sqlite_in_python_tutorial.html
 
-items_to_lookup = ['Caracal','Raptor','Rupture','Fenrir']
+items_to_lookup = ['Caracal','Raptor','Rupture','Fenrir']  #  for testing purposes
 
 sol_systems = {
     'Jita': 30000142,
     'Amarr': 30002187,
     'Dodixie':30002659,
-    'Rens':30002510
+    'Rens':30002510,
+    'Hek':30002053
     } #system names for price lookups
+
+stations = {
+    'Jita 4-4': 60003760,
+    'Rens BTT': 60004588,
+    'Hek BC': 60005686,
+    'Amarr': 60008494,
+    'Dodixie 9M10': 60011866
+    }
+
+regions = {
+    'Metropolis': 10000042,
+    'Domain': 10000043,
+    'Heimatar': 10000030,
+    'The Forge':10000002,
+    'Sinq': 10000032
+    } 
 
 id_url = r'https://crest-tq.eveonline.com/market/prices/'
 # for getting type id's and names i.e. type id 628 = Caracal
 # https://developers.eveonline.com/blog/article/the-end-of-public-crest-as-we-know-it
+
+base_url = r'https://crest-tq.eveonline.com/'
+market_url = r'/market/'
+sell_url = r'/orders/sell/?type=https://crest-tq.eveonline.com/inventory/types/'
+buy_url = r'/orders/buy/?type=https://crest-tq.eveonline.com/inventory/types/'
+
+#buy sell example is as follows for trit in metro
+#'https://crest-tq.eveonline.com//market/10000042/orders/sell/?type=https://crest-tq.eveonline.com/inventory/types/34/'
+
 
 # taking the id and then finding prices
 buy_sell_url = r'http://api.eve-central.com/api/marketstat/json?&typeid='
@@ -83,11 +109,11 @@ use_agent = {'user-agent': 'EVE name - Hiro Bukharin, hiro.bukharin@gmail.com'}
 id_lookup_dictionary = {}
 # the item name = named tuple (.name .e_id .id_num e_href) name, id string, id int, attribute url
 
-def open_for_id_name(id_url):
+def open_CREST_for_id_name(id_url):
     '''
-    opens the massive json map of the item database and returns it as a
-    json object that can then be iterated through to map the item number to item
-    name and allow us to do price look ups
+    opens CREST /market/prices endpoint and returns a massive map of the item database
+    and returns it as a json object that can then be iterated through to map the item
+    number to item name and allow us to do price look ups
     '''
     price_json_object = requests.get(id_url, headers=use_agent)  #lookup the url
     print('opened url with requests')
@@ -101,10 +127,10 @@ def open_for_id_name(id_url):
 
 def populate_item_dictionary(id_lookup_dictionary):
     '''
-    gets the json object from crest and then iterates through the items
+    gets the json object created from CREST by open_for_id_name and then iterates through the items
     to make a name, id # dictionary for further lookups
     '''
-    the_json = open_for_id_name(id_url) # load the object from CREST
+    the_json = open_CREST_for_id_name(id_url) # load the object from CREST
     end_count = the_json['totalCount'] -1
     #  the last number in the range of lists for the sake of making
     #  a range and using it to index the list of items
@@ -144,7 +170,7 @@ def lookup_sell(SolarSystem='30000142',ItemID='628'):
     sell_price = requests.get(sell_string,headers=use_agent).json()
     return sell_price[0]['sell']['fivePercent'] # return the price we want
 
-def lookup_buy(SolarSystem='30000142',ItemID='628'):
+def lookup_buy(SolarSystem=sol_systems['Jita'],ItemID='628'):
     '''
     takes a solar system and item id and finds the average
     (I think) buy price on eve central
@@ -159,11 +185,52 @@ def lookup_buy(SolarSystem='30000142',ItemID='628'):
     buy_price = requests.get(buy_string,headers=use_agent).json()
     return buy_price[0]['buy']['fivePercent']
 
+def find_buy_sell_orders(region_id, item_id,buy=True):
+    '''
+    takes an item ID and region ID and finds the buy orders for that item through CREST
+    returning a json object
+    '''
+    region_id = str(region_id)
+    item_id = str(item_id)
+    if buy: #  if buy flag is set True find buy information
+        
+        lookup_url = base_url + market_url + region_id + buy_url + item_id + '/'
+        region_buy = requests.get(lookup_url)
+        if region_buy.ok:
+            return region_buy.json()
+        else:
+            print('could not retrieve information, status code: ', region_buy.status_code)
+    else: #  we want sell information so return sell information 
+        lookup_url = base_url + market_url + region_id + sell_url + item_id + '/'
+        region_sell = requests.get(lookup_url)
+        if region_sell.ok:
+            return region_sell.json()
+        else:
+            print('could not retrive information, status code: ', region_sell.status_code)
+
+
+def find_average_station_order(region_id, item_id,station_id,buy=True):
+    '''
+    find the average sell/buy price of the orders for an item for a set region
+    refer to CREST_notes.txt for the structure of the JSON response for each order 
+    convert id's to text prior to adding them to the endpoint string
+    '''
+    pass
+
+def 
+
+
+'''
 populate_item_dictionary(id_lookup_dictionary)
 
 print(lookup_sell())
 print(lookup_buy())
+'''
 
+sell_test = find_buy_sell_orders(regions['Metropolis'], 34, buy=False)
+buy_test = find_buy_sell_orders(regions['Metropolis'], 34, buy=True)
+print('number of sell orders in metro for trit is ', len(sell_test['items']))
+print('number of buy orders in metro for trit is ', len(buy_test['items']))
 
 
 
